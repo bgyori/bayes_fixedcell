@@ -1,6 +1,7 @@
 function learnStructure(data_version,use_repeats)
 	%clear variables
 	addpath ..
+	addpath util
 	if nargin < 2
 		use_repeats = 0;
 		if nargin < 1
@@ -94,10 +95,39 @@ function learnStructure(data_version,use_repeats)
 				end
 			end
 			
+			
+			%HCC1806: IGF1, EGF, HRG, BTC
+			%184A1: IGF1, EGF, HRG, BTC
+			%MCF10A: IGF1, EGF, HRG, BTC
+			%BT20: IGF1, EGF, BTC, HGF
+			%MDA231: IGF1, EGF, BTC, HGF
+			%HS578T: IGF1, EGF, HRG, EPR
+			%MCF7: IGF1, EGF, HRG, EPR
+			%SKBR3: IGF1, EGF, HRG, EPR
+			ligands = {'EGF','IGF1','FGF1','HRG','HGF','EPR','BTC','NS'};
+			switch cellLine
+				case 'HCC1806'
+					ligidx = [1,2,4,7];
+				case '184A1'
+					ligidx = [1,2,4,7];
+				case 'MCF10A'
+					ligidx = [1,2,4,7];
+				case 'BT20'
+					ligidx = [1,2,5,7];
+				case 'MDA231'
+					ligidx = [1,2,5,7];
+				case 'HS578T'
+					ligidx = [1,2,4,6];
+				case 'MCF7'
+					ligidx = [1,2,4,6];
+				case 'SKBR3'
+					ligidx = [1,2,4,6];
+			end
+				
 			% Use only the chosen conditions
 			tidx = 2:4;
 			ts = ts(tidx); 
-			ligidx = [1,2,3,4,5,6,7];
+			%ligidx = [1,2,3,4,5,6,7];
 			inhidx = 1:4;
 			erkSignal.qm = erkSignal.qm(tidx,ligidx,inhidx);
 			aktSignal.qm = aktSignal.qm(tidx,ligidx,inhidx);
@@ -120,6 +150,7 @@ function learnStructure(data_version,use_repeats)
 			aktSignal = load([dirname cellLine '_pAKT.mat']);
 			foxoSignal = load([dirname cellLine '_FOXO3a.mat']);
 			
+			
 			% Pre-filtering
 			s = size(erkSignal.single_pSignal);
 			if s(1)==4
@@ -131,7 +162,7 @@ function learnStructure(data_version,use_repeats)
 			end
 
 			ts = ts(tidx); 
-			ligidx = [1 2 3 4]; % IGF1, EGF, BTC, HGF
+			ligidx = [1 2 3 4];
 			inhAidx = [4 3 2 1]; % 0, 0.0625, 0.25, 1
 			inhMidx = [2 1]; % 0, 0.1
 
@@ -275,7 +306,7 @@ function learnStructure(data_version,use_repeats)
 					% AKT to FOXO
 					A(3,5) = af;
 					A(3,6) = af & use_iqr;
-					mLH = getMarginalLikelihood(A,D,V);
+					mLH = getMarginalLikelihoodDBN(A,D,V);
 					mLH2 = getMarginalLikelihoodDBGe(A,D,V);
 					mLH3 = getMarginalLikelihoodBN(A,S,Db,V');
 					mLH4 = getMarginalLikelihoodBGe(A,Dx,V);
