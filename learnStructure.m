@@ -28,7 +28,7 @@ function learnStructure(data_version,use_repeats)
 
 		switch data_version
 		case 1
-			dirname = '../BEN - FOXO3a DBN/FixedCellData/';
+			dirname = 'C:\Users\SOMPONNAT\Dropbox (Somponnat workspace)\Collaborative Projects\BEN - FOXO3a DBN\FixedCellData\';
 			erkSignal = load([dirname cellLine '_pERK.mat']);
 			aktSignal = load([dirname cellLine '_pAKT.mat']);
 			foxoSignal = load([dirname cellLine '_FOXO3a.mat']);
@@ -145,7 +145,7 @@ function learnStructure(data_version,use_repeats)
 			aktSignal.val(:,[2,4]) = 0;
 			foxoSignal.val = ones(s(2:end));
 		case 2
-			dirname = '../BEN - FOXO3a DBN/FixedCellData-TitratingMEKiAKTi/';
+			dirname = 'C:\Users\SOMPONNAT\Dropbox (Somponnat workspace)\Collaborative Projects\BEN - FOXO3a DBN\FixedCellData-TitratingMEKiAKTi\';
 			erkSignal = load([dirname cellLine '_pERK.mat']);
 			aktSignal = load([dirname cellLine '_pAKT.mat']);
 			foxoSignal = load([dirname cellLine '_FOXO3a.mat']);
@@ -347,8 +347,9 @@ function learnStructure(data_version,use_repeats)
 	end
 
 	figure;
-	bar(LDBN_AvsE);
-	set(gca,'xticklabel',cellLines);
+    [x,idx] = sort(LDBN_AvsE,'descend');
+    bar(x);
+    set(gca,'xticklabel',cellLines(idx))
 	lims = [min(LDBN_AvsE),max(LDBN_AvsE)];
 	ylim(lims);
 	ylabel('Log relative probability');
