@@ -71,7 +71,7 @@ function data = read_data_table(cellLine)
 	meki_col = meki_values(:);
 	
 	variable_names = {'ligand', 'akti', 'meki', 'time', ...
-		'erk_mu', 'akt_mu', 'foxo_qm', 'foxo_iqr', 'foxo_pd'};
+		'erk_mu', 'akt_mu', 'foxo_mu', 'foxo_iqr', 'foxo_pd'};
 	
     % Use normalization code for FOXO signal
 	foxoSignal = normalize_foxo(foxoSignal);

@@ -4,8 +4,6 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 	addpath ..
 	addpath util
 	
-	ligand_only = 'IGF1';
-	
 	if nargin < 3
         add_noise = false;
 		if nargin < 2
@@ -17,8 +15,7 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 		noise_scale = 0.05;
 		data.erk_mu = add_noise_to_signal(data.erk_mu, noise_scale);
 		data.akt_mu = add_noise_to_signal(data.akt_mu, noise_scale);
-		data.foxo_mu = add_noise_to_signal(data.foxo_mu, noise_scale);
-		data.foxo_iqr = add_noise_to_signal(data.foxo_iqr, noise_scale);
+		data.foxo_pd = add_noise_to_signal(data.foxo_pd, noise_scale);
 	end
 	
 	% Add columns for ligands
@@ -140,38 +137,31 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 	th = otsu(foxo_table.akt_mu);
 	foxo_table.akt_mu_d = 1 * (foxo_table.akt_mu > th);
 	
-	th = otsu(foxo_table.foxo_mu);
-	foxo_table.foxo_mu_d = 1 * (foxo_table.foxo_mu > th);
-	
-	th = otsu(foxo_table.foxo_iqr);
-	foxo_table.foxo_iqr_d = 1 * (foxo_table.foxo_iqr > th);
+	th = otsu(foxo_table.foxo_pd);
+	foxo_table.foxo_pd_d = 1 * (foxo_table.foxo_pd > th);
 	
 	Dminus = foxo_table{foxo_table.time ~= max(foxo_table.time), ...
-				{'erk_mu', 'akt_mu', 'foxo_mu', 'foxo_iqr'}}';
+				{'erk_mu', 'akt_mu', 'foxo_pd'}}';
 	Dplus = foxo_table{foxo_table.time ~= min(foxo_table.time), ...
-				{'erk_mu', 'akt_mu', 'foxo_mu', 'foxo_iqr'}}';
+				{'erk_mu', 'akt_mu', 'foxo_pd'}}';
 	Dminus_d = foxo_table{foxo_table.time ~= max(foxo_table.time), ...
-				{'erk_mu_d', 'akt_mu_d', 'foxo_mu_d', 'foxo_iqr_d'}}';
+				{'erk_mu_d', 'akt_mu_d', 'foxo_pd_d'}}';
 	Dplus_d = foxo_table{foxo_table.time ~= min(foxo_table.time), ...
-				{'erk_mu_d', 'akt_mu_d', 'foxo_mu_d', 'foxo_iqr_d'}}';
+				{'erk_mu_d', 'akt_mu_d', 'foxo_pd_d'}}';
 	
 	V = ones(size(Dminus));
 	S = 1;
 	% Total nodes: AKT + ERK + FOXOmu + FOXOiqr
-	A = zeros(4);
+	A = zeros(3);
 	for af = [0,1]
 		for ef = [0,1]
 			% Choose AKT to ERK edge
 			A(1,3) = ef;
-			A(1,4) = ef;
 			A(2,3) = af;
-			A(2,4) = af;
 			lh_tmp = learn_dbn_bde(A,Dminus_d,Dplus_d,V,S,levels);
-			LDBN_BDe.Fm(2*af+ef+1) = lh_tmp(3);
-			LDBN_BDe.Fi(2*af+ef+1) = lh_tmp(4);
+			LDBN_BDe.F(2*af+ef+1) = lh_tmp(3);
 			lh_tmp = learn_dbn_gauss(A,Dminus,Dplus,V, true);
-			LDBN_Gauss.Fm(2*af+ef+1) = lh_tmp(3);
-			LDBN_Gauss.Fi(2*af+ef+1) = lh_tmp(4);
+			LDBN_Gauss.F(2*af+ef+1) = lh_tmp(3);
 		end
 	end
 	

@@ -1,4 +1,4 @@
-rerun = false;
+rerun = true;
 ligand_type = 'none';
 if rerun
 	ns = 100;

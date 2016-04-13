@@ -6,10 +6,9 @@ function p = get_edge_probs(LH)
 	LEA = LH.A(2);
 	p.pEA = exp(LEA-logsumexp(LH.A));
 	% ERK to FOXO
-	LF = LH.Fm + LH.Fi;
-	LEF = logsumexp(LF([2,4]));
-	p.pEF = exp(LEF-logsumexp(LF));
+	LEF = logsumexp(LH.F([2,4]));
+	p.pEF = exp(LEF-logsumexp(LH.F));
 	% AKT to FOXO
-	LAF = logsumexp(LF([3,4]));
-	p.pAF = exp(LAF-logsumexp(LF));
+	LAF = logsumexp(LH.F([3,4]));
+	p.pAF = exp(LAF-logsumexp(LH.F));
 end
