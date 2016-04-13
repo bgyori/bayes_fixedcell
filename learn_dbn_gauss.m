@@ -1,45 +1,37 @@
-function [mLH,E] = getMarginalLikelihood(A,D,V)
-	intTerms = true;
-
-	[ns,nt,nc] = size(D);
-	
-	if nargin < 3
-		V = ones(ns,nc);
-	end
-	
+function [mLH,E] = learn_dbn_gauss(A,Dminus,Dplus,V,int_terms)
+	ns = size(A,1);
  	E = zeros(ns);
 	
-	
-	mLH = zeros(1,ns);
+	mLH = zeros(1, ns);
 	for i=1:ns
-		Dv = D(:,:,V(i,:)==1);
-		X = reshape(Dv(i,2:end,:),[1,(nt-1)*size(Dv,3)])';
+		Dvminus = Dminus(:,V(i,:)==1);
+		Dvplus = Dplus(:,V(i,:)==1);
+		X = Dvplus(i,:)';
 		X = stdize(X);
-		Dminus = reshape(Dv(:,1:end-1,:),[ns,(nt-1)*size(Dv,3)]);
 		
-		if isempty(Dminus)
+		if isempty(Dvminus)
 			mLH(i) = nan;
 			continue;
 		end
 		
-		n = size(Dv,3)*(nt-1);
+		n = size(Dvplus,2);
 		
 		parents = find(A(:,i));
 		np = length(parents);
 		
 		
-		if intTerms
+		if int_terms
 			npc = 2^np;
 			c = (1+n)^(-(npc-1)/2);
 			B = zeros(n,npc-1);
-			B1 = Dminus(parents,:)';
+			B1 = Dvminus(parents,:)';
 			for k=1:npc-1
 				mask = dec2binvec(k,np);
 				B(:,k) = prod(B1(:,mask),2);
 			end
 		else
 			c = (1+n)^(-np/2);
-			B = Dminus(parents,:)';
+			B = Dvminus(parents,:)';
 		end
 		
 		B = stdize(B);
@@ -55,7 +47,7 @@ function [mLH,E] = getMarginalLikelihood(A,D,V)
 		
 		
 		for j=1:ns
- 			cc = corrcoef(Dminus(j,:),X);
+ 			cc = corrcoef(Dvminus(j,:),X);
  			E(j,i) = cc(1,2);
  		end
 	end
