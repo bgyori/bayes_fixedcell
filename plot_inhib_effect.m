@@ -1,4 +1,5 @@
 function d_matrix = plot_inhib_effect()
+	addpath util
     cell_lines = {'184A1','MCF10A','SKBR3','HCC1806','HS578T', ...
 				'MDA231','BT20','MCF7','T47D'};
 	for c = 1:length(cell_lines)
@@ -9,9 +10,11 @@ function d_matrix = plot_inhib_effect()
 		akt_inhib = data((data.meki==0) & (data.akti==1),:);
 		akt_noinhib = data((data.meki==0) & (data.akti==0),:);
 		
+		ts = akt_inhib.time(strcmp(akt_inhib.ligand, 'NS'));
+		auct = @(x) auc(ts, x);
+		
 		akt_inhib.diff = akt_inhib.erk_mu - akt_noinhib.erk_mu;
-        
-		akt_inhib_mean = varfun(@mean, akt_inhib, ...
+		akt_inhib_mean = varfun(auct, akt_inhib, ...
 			'InputVariables', 'diff', ...
 			'GroupingVariables', 'ligand');
 			
@@ -21,7 +24,7 @@ function d_matrix = plot_inhib_effect()
 		
 		erk_inhib.diff = erk_inhib.akt_mu - erk_noinhib.akt_mu;
         
-		erk_inhib_mean = varfun(@mean,erk_inhib,...
+		erk_inhib_mean = varfun(auct, erk_inhib,...
 			'InputVariables', 'diff',...
 			'GroupingVariables', 'ligand');
 		
@@ -32,7 +35,7 @@ function d_matrix = plot_inhib_effect()
 		foxo_akt_inhib.diff = foxo_akt_inhib.foxo_pd - ...
 								foxo_akt_noinhib.foxo_pd;
         
-		foxo_akt_inhib_mean = varfun(@mean, foxo_akt_inhib, ...
+		foxo_akt_inhib_mean = varfun(auct, foxo_akt_inhib, ...
 			'InputVariables', 'diff', ...
 			'GroupingVariables', 'ligand');
 		
@@ -43,25 +46,25 @@ function d_matrix = plot_inhib_effect()
 		foxo_erk_inhib.diff = foxo_erk_inhib.foxo_pd - ...
 								foxo_erk_noinhib.foxo_pd;
         
-		foxo_erk_inhib_mean = varfun(@mean, foxo_erk_inhib, ...
+		foxo_erk_inhib_mean = varfun(auct, foxo_erk_inhib, ...
 			'InputVariables', 'diff', ...
 			'GroupingVariables', 'ligand');
 		
 		for i = 1:length(ligands)
-			dE(c,i) = akt_inhib_mean{ligands{i}, {'mean_diff'}};
-			dA(c,i) = erk_inhib_mean{ligands{i}, {'mean_diff'}};
-			dFA(c,i) = foxo_akt_inhib_mean{ligands{i}, {'mean_diff'}};
-			dFE(c,i) = foxo_erk_inhib_mean{ligands{i}, {'mean_diff'}};
+			dE(c,i) = akt_inhib_mean{ligands{i}, {'Fun_diff'}};
+			dA(c,i) = erk_inhib_mean{ligands{i}, {'Fun_diff'}};
+			dFA(c,i) = foxo_akt_inhib_mean{ligands{i}, {'Fun_diff'}};
+			dFE(c,i) = foxo_erk_inhib_mean{ligands{i}, {'Fun_diff'}};
 		end
 	end
     
-	clim = 1;
+	clim = max(abs([dA(:);dE(:)]));
 	
     figure;
     colormap(get_colormap());
     subplot(2,1,1);
     imagesc(dA, [-clim, clim]);
-    title('MEKi-driven AKT change')
+    title('MEKi driven AKT change')
     colorbar;
     set(gca, 'yticklabel', cell_lines);
     set(gca, 'xticklabel', ligands); 
@@ -99,7 +102,8 @@ function d_matrix = plot_inhib_effect()
     set(gca,'xticklabel',cell_lines);
     set(gca,'xticklabelrotation', 45);
 	
-	
+	clim = max(abs([dA(:);dE(:);dFA(:);dFE(:)]));
+
 	dE_mean = mean(dE,2);
 	dA_mean = mean(dA,2);
 	dFA_mean = mean(dFA,2);
