@@ -1,4 +1,4 @@
-function d_matrix = plot_inhib_effect()
+function d_matrix = plot_inhib_effect_new()
 	addpath util
     cell_lines = {'184A1','MCF10A','SKBR3','HCC1806','HS578T', ...
 				'MDA231','BT20','MCF7','T47D'};
@@ -13,48 +13,68 @@ function d_matrix = plot_inhib_effect()
 		ts = akt_inhib.time(strcmp(akt_inhib.ligand, 'NS'));
 		auct = @(x) auc(ts, x);
 		
-		akt_inhib.diff = akt_inhib.erk_mu - akt_noinhib.erk_mu;
-		akt_inhib_mean = varfun(auct, akt_inhib, ...
-			'InputVariables', 'diff', ...
+		akt_inhib_auc = varfun(auct, akt_inhib, ...
+			'InputVariables', 'erk_mu', ...
 			'GroupingVariables', 'ligand');
+        
+		akt_noinhib_auc = varfun(auct, akt_noinhib, ...
+			'InputVariables', 'erk_mu', ...
+			'GroupingVariables', 'ligand');
+        
+		akt_inhib_auc.diff = akt_inhib_auc.Fun_erk_mu - akt_noinhib_auc.Fun_erk_mu;
+
 			
 		% AKT upon MEK inhibition
 		erk_inhib = data((data.akti==0) & (data.meki==1),:);
 		erk_noinhib = data((data.akti==0) & (data.meki==0),:);
-		
-		erk_inhib.diff = erk_inhib.akt_mu - erk_noinhib.akt_mu;
         
-		erk_inhib_mean = varfun(auct, erk_inhib,...
-			'InputVariables', 'diff',...
+		erk_inhib_auc = varfun(auct, erk_inhib, ...
+			'InputVariables', 'akt_mu', ...
 			'GroupingVariables', 'ligand');
+        
+		erk_noinhib_auc = varfun(auct, erk_noinhib, ...
+			'InputVariables', 'akt_mu', ...
+			'GroupingVariables', 'ligand');
+        
+		erk_inhib_auc.diff = erk_inhib_auc.Fun_akt_mu - erk_noinhib_auc.Fun_akt_mu;
+
 		
 		% FOXO upon AKT inhibition
 		foxo_akt_inhib = data((data.meki==0) & (data.akti==1),:);
 		foxo_akt_noinhib = data((data.meki==0) & (data.akti==0),:);
 		
-		foxo_akt_inhib.diff = foxo_akt_inhib.foxo_pd - ...
-								foxo_akt_noinhib.foxo_pd;
         
-		foxo_akt_inhib_mean = varfun(auct, foxo_akt_inhib, ...
-			'InputVariables', 'diff', ...
+		foxo_akt_inhib_auc = varfun(auct, foxo_akt_inhib, ...
+			'InputVariables', 'foxo_pd', ...
 			'GroupingVariables', 'ligand');
-		
+        
+		foxo_akt_noinhib_auc = varfun(auct, foxo_akt_noinhib, ...
+			'InputVariables', 'foxo_pd', ...
+			'GroupingVariables', 'ligand');
+        
+		foxo_akt_inhib_auc.diff = foxo_akt_inhib_auc.Fun_foxo_pd - foxo_akt_noinhib_auc.Fun_foxo_pd;
+
+
 		% FOXO upon ERK inhibition
 		foxo_erk_inhib = data((data.meki==1) & (data.akti==0),:);
 		foxo_erk_noinhib = data((data.meki==0) & (data.akti==0),:);
-		
-		foxo_erk_inhib.diff = foxo_erk_inhib.foxo_pd - ...
-								foxo_erk_noinhib.foxo_pd;
         
-		foxo_erk_inhib_mean = varfun(auct, foxo_erk_inhib, ...
-			'InputVariables', 'diff', ...
+		foxo_erk_inhib_auc = varfun(auct, foxo_erk_inhib, ...
+			'InputVariables', 'foxo_pd', ...
 			'GroupingVariables', 'ligand');
+        
+		foxo_erk_noinhib_auc = varfun(auct, foxo_erk_noinhib, ...
+			'InputVariables', 'foxo_pd', ...
+			'GroupingVariables', 'ligand');
+        
+		foxo_erk_inhib_auc.diff = foxo_erk_inhib_auc.Fun_foxo_pd - foxo_erk_noinhib_auc.Fun_foxo_pd;
+
 		
 		for i = 1:length(ligands)
-			dE(c,i) = akt_inhib_mean{ligands{i}, {'Fun_diff'}};
-			dA(c,i) = erk_inhib_mean{ligands{i}, {'Fun_diff'}};
-			dFA(c,i) = foxo_akt_inhib_mean{ligands{i}, {'Fun_diff'}};
-			dFE(c,i) = foxo_erk_inhib_mean{ligands{i}, {'Fun_diff'}};
+			dE(c,i) = akt_inhib_auc{ligands{i}, {'diff'}};
+			dA(c,i) = erk_inhib_auc{ligands{i}, {'diff'}};
+			dFA(c,i) = foxo_akt_inhib_auc{ligands{i}, {'diff'}};
+			dFE(c,i) = foxo_erk_inhib_auc{ligands{i}, {'diff'}};
 		end
 	end
     
@@ -102,7 +122,7 @@ function d_matrix = plot_inhib_effect()
     set(gca,'xticklabel',cell_lines);
     set(gca,'xticklabelrotation', 45);
 	
-	clim = max(abs([dA(:);dE(:);dFA(:);dFE(:)]));
+	clim = 100;
 
 	dE_mean = mean(dE,2);
 	dA_mean = mean(dA,2);
@@ -111,7 +131,7 @@ function d_matrix = plot_inhib_effect()
 	d_matrix = [dE_mean, dA_mean, dFA_mean, dFE_mean];
 	figure;
 	colormap(get_colormap());
-	imagesc(d_matrix', [-clim/2, clim/2]);
+	imagesc(d_matrix', [-clim, clim]);
 	set(gca, 'xticklabel', cell_lines);
 	set(gca,'xticklabelrotation', 90)
 	set(gca,'ytick', [1,2,3,4]);
