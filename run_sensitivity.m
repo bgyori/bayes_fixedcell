@@ -65,7 +65,7 @@ xlim([0, 1])
 ylim([0, 1])
 axis square
 
-d_matrix = plot_inhib_effect();
+d_matrix = plot_inhib_effect_new();
 figure; hold on;
 for i=1:length(cell_lines)
 	plot(means{strcmp(means.algo, 'DBN_BDe') & ...
