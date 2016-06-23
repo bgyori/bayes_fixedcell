@@ -1,3 +1,4 @@
+addpath util
 rerun = true;
 ligand_type = 'none';
 if rerun
@@ -18,11 +19,15 @@ if rerun
 				learn_structure(data{c}, ligand_type, true);
 			pdbde = get_edge_probs(LDBN_BDe);
 			pdbga = get_edge_probs(LDBN_Gauss);
+			pdbge = get_edge_probs(LDBN_BGe);
 			sens = [sens; cell2table({cell_lines{c}, ...
 				'DBN_BDe', pdbde.pAE, pdbde.pEA, pdbde.pEF, pdbde.pAF}, ...
 				'VariableNames', columns)];
 			sens = [sens; cell2table({cell_lines{c}, ...
 				'DBN_Gauss', pdbga.pAE, pdbga.pEA, pdbga.pEF, pdbga.pAF}, ...
+				'VariableNames', columns)];
+			sens = [sens; cell2table({cell_lines{c}, ...
+				'DBN_BGe', pdbge.pAE, pdbge.pEA, pdbge.pEF, pdbge.pAF}, ...
 				'VariableNames', columns)];
 		end
 	end
@@ -36,10 +41,26 @@ plot_edge_probs(sens(strcmp(sens.algo, 'DBN_BDe'),:), cell_lines)
 title(['BDe ', ligand_type])
 plot_edge_probs(sens(strcmp(sens.algo, 'DBN_Gauss'),:), cell_lines)
 title(['Gauss ', ligand_type])
+plot_edge_probs(sens(strcmp(sens.algo, 'DBN_BGe'),:), cell_lines)
+title(['BGe ', ligand_type])
+
 
 means = varfun(@mean, sens, 'inputvariables', ...
 	{'pAE', 'pEA', 'pEF', 'pAF'}, ...
 	'groupingvariables', {'cell_line', 'algo'});
+
+discr_prob = @(x) (x > 0.5);
+
+means_discr = varfun(discr_prob, means, 'inputvariables', ...
+	{'mean_pAE', 'mean_pEA', 'mean_pEF', 'mean_pAF'}, ...
+	'groupingvariables', {'cell_line', 'algo'});
+
+means_discr_bde = means_discr{strcmp(means_discr.algo, 'DBN_BDe'), ...
+	{'Fun_mean_pAE', 'Fun_mean_pEA', 'Fun_mean_pEF', 'Fun_mean_pAF'}};
+means_discr_gauss = means_discr{strcmp(means_discr.algo, 'DBN_Gauss'), ...
+	{'Fun_mean_pAE', 'Fun_mean_pEA', 'Fun_mean_pEF', 'Fun_mean_pAF'}};
+means_discr_bge = means_discr{strcmp(means_discr.algo, 'DBN_BGe'), ...
+	{'Fun_mean_pAE', 'Fun_mean_pEA', 'Fun_mean_pEF', 'Fun_mean_pAF'}};
 
 figure; hold on;
 title('BDe vs Gaussian DBN scores');

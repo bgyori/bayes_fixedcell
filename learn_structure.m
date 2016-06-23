@@ -1,4 +1,4 @@
-function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
+function [LDBN_Gauss,LDBN_BGe,LDBN_BDe] = ...
     learn_structure(data, ligand_type, add_noise)
 	%clear variables
 	addpath ..
@@ -10,7 +10,7 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 			ligand_type = 'none';
 		end
 	end
-	
+
 	if add_noise
 		noise_scale = 0.05;
 		data.erk_mu = add_noise_to_signal(data.erk_mu, noise_scale);
@@ -83,6 +83,8 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 		LDBN_BDe.E(ae+1) = lh_tmp(1);
 		lh_tmp = learn_dbn_gauss(A,Dminus,Dplus,V, false);
 		LDBN_Gauss.E(ae+1) = lh_tmp(1);
+		lh_tmp = learn_dbn_bge(A, Dminus, Dplus, V);
+		LDBN_BGe.E(ae+1) = lh_tmp(1);
 	end
 	
 	% Prepare data for learning AKT incoming edges
@@ -116,7 +118,7 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 	S = 1;
 	% Total nodes: AKT + ERK + number of ligands
 	A = zeros(2 + length(ligands));
-	% All ligands are connected to ERK
+	% All ligands are connected to AKT
 	A(3:end, 2) = 1;
 	for ea = [0,1]
 		% Choose AKT to ERK edge
@@ -125,6 +127,8 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 		LDBN_BDe.A(ea+1) = lh_tmp(2);
 		lh_tmp = learn_dbn_gauss(A,Dminus,Dplus,V, false);
 		LDBN_Gauss.A(ea+1) = lh_tmp(2);
+		lh_tmp = learn_dbn_bge(A, Dminus, Dplus, V);
+		LDBN_BGe.A(ea+1) = lh_tmp(2);
 	end
 	
 	% Prepare data for learning FOXO incoming edges
@@ -162,13 +166,10 @@ function [LDBN_Gauss,LDBN_BGe,LDBN_BDe,LBN_BGe,LBN_BDe] = ...
 			LDBN_BDe.F(2*af+ef+1) = lh_tmp(3);
 			lh_tmp = learn_dbn_gauss(A,Dminus,Dplus,V, true);
 			LDBN_Gauss.F(2*af+ef+1) = lh_tmp(3);
+			lh_tmp = learn_dbn_bge(A, Dminus, Dplus, V);
+			LDBN_BGe.F(2*af+ef+1) = lh_tmp(3);
 		end
 	end
-	
-	% To be done
-	LDBN_BGe = {};
-	LBN_BGe = {};
-	LBN_BDe = {};
 end
 
 function data = add_ligand_columns(data, type)
